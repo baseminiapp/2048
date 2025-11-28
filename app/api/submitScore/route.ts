@@ -1,22 +1,25 @@
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "../supabaseClient";
-import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
-  const body = await req.json();
-  const { username, score } = body;
+export async function POST(req: NextRequest) {
+  try {
+    const { username, score } = await req.json();
 
-  if (!username || !score) {
-    return NextResponse.json({ error: "Missing data" }, { status: 400 });
+    if (!username || typeof score !== "number") {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from("scores")
+      .insert([{ username, score }]);
+
+    if (error) {
+      console.error(error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ message: "Score submitted successfully" });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-
-  const { data, error } = await supabase
-    .from("leaderboard")
-    .insert([{ username, score }]);
-
-  if (error) {
-    console.log(error);
-    return NextResponse.json({ error: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ success: true, data });
 }

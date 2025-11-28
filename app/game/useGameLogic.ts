@@ -1,138 +1,91 @@
-"use client";
+'use client';
+import { useState, useEffect } from "react";
 
-import { useEffect, useState } from "react";
-
-type Board = number[];
-
-const GRID_SIZE = 4;
-const TILE_COUNT = GRID_SIZE * GRID_SIZE;
+export type Board = number[][];
 
 export function useGameLogic() {
-  const [board, setBoard] = useState<Board>(Array(TILE_COUNT).fill(0));
-  const [score, setScore] = useState(0);
+  const [board, setBoard] = useState<Board>(generateEmptyBoard());
+  const [score, setScore] = useState<number>(0);
 
-  // Generate random tile (2 or 4)
-  const addRandomTile = (newBoard: Board) => {
-    const emptyIndexes = newBoard
-      .map((val, i) => (val === 0 ? i : null))
-      .filter((v) => v !== null) as number[];
+  function generateEmptyBoard(): Board {
+    return Array.from({ length: 4 }, () => Array(4).fill(0));
+  }
 
-    if (emptyIndexes.length === 0) return newBoard;
-
-    const index = emptyIndexes[Math.floor(Math.random() * emptyIndexes.length)];
-    newBoard[index] = Math.random() < 0.9 ? 2 : 4;
+  function addRandomTile(newBoard: Board): Board {
+    const empty: [number, number][] = [];
+    newBoard.forEach((row, i) =>
+      row.forEach((tile, j) => {
+        if (tile === 0) empty.push([i, j]);
+      })
+    );
+    if (empty.length === 0) return newBoard;
+    const [i, j] = empty[Math.floor(Math.random() * empty.length)];
+    newBoard[i][j] = Math.random() < 0.9 ? 2 : 4;
     return newBoard;
-  };
+  }
 
-  // Start game
-  const reset = () => {
-    const newBoard = Array(TILE_COUNT).fill(0);
-    addRandomTile(newBoard);
-    addRandomTile(newBoard);
-    setBoard([...newBoard]);
+  function reset() {
+    let b = generateEmptyBoard();
+    b = addRandomTile(addRandomTile(b));
+    setBoard(b);
     setScore(0);
-  };
-
-  // Movement tool
-  const slideRow = (row: number[]) => {
-    const filtered = row.filter((n) => n !== 0);
-    const merged: number[] = [];
-
-    let i = 0;
-    while (i < filtered.length) {
-      if (filtered[i] === filtered[i + 1]) {
-        merged.push(filtered[i] * 2);
-        setScore((s) => s + filtered[i] * 2);
-        i += 2;
-      } else {
-        merged.push(filtered[i]);
-        i++;
-      }
-    }
-
-    while (merged.length < GRID_SIZE) {
-      merged.push(0);
-    }
-
-    return merged;
-  };
-
-  // Move functions
-  const moveLeft = () => {
-    const newBoard = [...board];
-    for (let r = 0; r < GRID_SIZE; r++) {
-      const row = newBoard.slice(r * GRID_SIZE, r * GRID_SIZE + GRID_SIZE);
-      const moved = slideRow(row);
-      for (let c = 0; c < GRID_SIZE; c++) {
-        newBoard[r * GRID_SIZE + c] = moved[c];
-      }
-    }
-    setBoard(addRandomTile(newBoard.slice()));
-  };
-
-  const moveRight = () => {
-    const newBoard = [...board];
-    for (let r = 0; r < GRID_SIZE; r++) {
-      const row = newBoard
-        .slice(r * GRID_SIZE, r * GRID_SIZE + GRID_SIZE)
-        .reverse();
-      const moved = slideRow(row).reverse();
-      for (let c = 0; c < GRID_SIZE; c++) {
-        newBoard[r * GRID_SIZE + c] = moved[c];
-      }
-    }
-    setBoard(addRandomTile(newBoard.slice()));
-  };
-
-  const moveUp = () => {
-    const newBoard = [...board];
-    for (let c = 0; c < GRID_SIZE; c++) {
-      const col = [];
-      for (let r = 0; r < GRID_SIZE; r++) {
-        col.push(newBoard[r * GRID_SIZE + c]);
-      }
-      const moved = slideRow(col);
-      for (let r = 0; r < GRID_SIZE; r++) {
-        newBoard[r * GRID_SIZE + c] = moved[r];
-      }
-    }
-    setBoard(addRandomTile(newBoard.slice()));
-  };
-
-  const moveDown = () => {
-    const newBoard = [...board];
-    for (let c = 0; c < GRID_SIZE; c++) {
-      const col = [];
-      for (let r = 0; r < GRID_SIZE; r++) {
-        col.push(newBoard[r * GRID_SIZE + c]);
-      }
-      const moved = slideRow(col.reverse()).reverse();
-      for (let r = 0; r < GRID_SIZE; r++) {
-        newBoard[r * GRID_SIZE + c] = moved[r];
-      }
-    }
-    setBoard(addRandomTile(newBoard.slice()));
-  };
-
-  // Listen to keyboard
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") moveLeft();
-      if (e.key === "ArrowRight") moveRight();
-      if (e.key === "ArrowUp") moveUp();
-      if (e.key === "ArrowDown") moveDown();
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  });
+  }
 
   useEffect(() => {
     reset();
+    const handleKey = (e: KeyboardEvent) => {
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        e.preventDefault();
+        move(e.key.replace("Arrow", "").toLowerCase());
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  return {
-    board,
-    score,
-    reset,
-  };
+  function move(direction: string) {
+    let newBoard: Board = board.map((row) => [...row]);
+    let changed = false;
+
+    const combine = (line: number[]): number[] => {
+      const newLine = line.filter((n) => n !== 0);
+      for (let i = 0; i < newLine.length - 1; i++) {
+        if (newLine[i] === newLine[i + 1]) {
+          newLine[i] *= 2;
+          setScore((prev) => prev + newLine[i]);
+          newLine[i + 1] = 0;
+        }
+      }
+      return newLine.filter((n) => n !== 0).concat(Array(line.length).fill(0)).slice(0, 4);
+    };
+
+    if (direction === "left") {
+      newBoard = newBoard.map(combine);
+    } else if (direction === "right") {
+      newBoard = newBoard.map((row) => combine(row.reverse()).reverse());
+    } else if (direction === "up") {
+      newBoard = rotate(newBoard);
+      newBoard = newBoard.map(combine);
+      newBoard = rotate(newBoard, true);
+    } else if (direction === "down") {
+      newBoard = rotate(newBoard);
+      newBoard = newBoard.map((row) => combine(row.reverse()).reverse());
+      newBoard = rotate(newBoard, true);
+    }
+
+    changed = JSON.stringify(newBoard) !== JSON.stringify(board);
+    if (changed) newBoard = addRandomTile(newBoard);
+    setBoard(newBoard);
+  }
+
+  function rotate(matrix: Board, counterClockwise = false): Board {
+    const N = matrix.length;
+    const result: Board = Array.from({ length: N }, () => Array(N).fill(0));
+    for (let i = 0; i < N; i++)
+      for (let j = 0; j < N; j++)
+        result[counterClockwise ? N - j - 1 : j][counterClockwise ? i : i] = matrix[i][j];
+    return result;
+  }
+
+  return { board, move, reset, score };
 }
