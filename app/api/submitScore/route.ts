@@ -1,12 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "../supabaseClient";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { username, score } = await req.json();
+    const { username, score } = await request.json();
 
     if (!username || typeof score !== "number") {
-      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+      return new Response(
+        JSON.stringify({ error: "Invalid input" }),
+        { status: 400 }
+      );
     }
 
     const { error } = await supabase
@@ -14,12 +16,14 @@ export async function POST(req: NextRequest) {
       .insert([{ username, score }]);
 
     if (error) {
-      console.error(error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Supabase insert error:", error);
+      return new Response(JSON.stringify({ error }), { status: 400 });
     }
 
-    return NextResponse.json({ message: "Score submitted successfully" });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
+
+  } catch (err) {
+    console.error("submitScore crashed:", err);
+    return new Response(JSON.stringify({ error: "Server Error" }), { status: 500 });
   }
 }
