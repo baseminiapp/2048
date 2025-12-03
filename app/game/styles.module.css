@@ -1,66 +1,69 @@
-.gameContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  background: #faf8ef;
-  min-height: 100vh;
+.container {
+  max-width: 400px;
+  margin: 20px auto;
+  text-align: center;
   font-family: 'Arial', sans-serif;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: #776e65;
+}
+
+.score {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #776e65;
 }
 
 .board {
   display: grid;
   grid-template-columns: repeat(4, 80px);
   grid-gap: 10px;
-  margin-bottom: 20px;
+  justify-content: center;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #bbada0;
+  border-radius: 8px;
 }
 
 .tile {
   width: 80px;
   height: 80px;
-  background: #cdc1b4;
-  border-radius: 8px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  font-size: 2rem;
   font-weight: bold;
-  font-size: 24px;
+  border-radius: 6px;
   color: #776e65;
+  background-color: #cdc1b4;
+  transition: all 0.2s ease;
 }
 
-.leaderboard {
-  width: 300px;
-  margin-top: 20px;
-  background: #eee4da;
-  padding: 10px;
-  border-radius: 8px;
-}
+.tile-2 { background-color: #eee4da; }
+.tile-4 { background-color: #ede0c8; }
+.tile-8 { background-color: #f2b179; color: #f9f6f2; }
+.tile-16 { background-color: #f59563; color: #f9f6f2; }
+.tile-32 { background-color: #f67c5f; color: #f9f6f2; }
+.tile-64 { background-color: #f65e3b; color: #f9f6f2; }
+.tile-128 { background-color: #edcf72; color: #f9f6f2; }
+.tile-256 { background-color: #edcc61; color: #f9f6f2; }
+.tile-512 { background-color: #edc850; color: #f9f6f2; }
+.tile-1024 { background-color: #edc53f; color: #f9f6f2; }
+.tile-2048 { background-color: #edc22e; color: #f9f6f2; }
 
-.leaderboard h3 {
-  text-align: center;
-  margin-bottom: 8px;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.leaderboardEntry {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 8px;
-  border-bottom: 1px solid #ccc;
-}
-
-.newGameBtn {
+.reset {
   padding: 10px 20px;
-  background: #f57c00;
-  color: white;
+  font-size: 1rem;
+  background-color: #8f7a66;
+  color: #f9f6f2;
   border: none;
   border-radius: 6px;
-  font-weight: bold;
   cursor: pointer;
-  margin-bottom: 20px;
+  margin-top: 10px;
+  transition: background 0.2s;
 }
 
-.newGameBtn:hover {
-  background: #ff9800;
-}
+.reset:hover { background-color: #776e65; }

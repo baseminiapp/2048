@@ -1,11 +1,11 @@
-"use client";
-
 import GameBoard from "./game/GameBoard";
+import Leaderboard from "./game/Leaderboard";
 
-export default function HomePage() {
+export default function Page() {
   return (
-    <main style={{ padding: 20 }}>
+    <div>
       <GameBoard />
-    </main>
+      <Leaderboard />
+    </div>
   );
 }

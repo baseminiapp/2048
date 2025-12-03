@@ -1,0 +1,89 @@
+/* Board container */
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, 80px);
+  grid-template-rows: repeat(4, 80px);
+  gap: 10px;
+  background: #bbada0;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 20px auto;
+  width: max-content;
+}
+
+/* Tile styling */
+.tile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  font-weight: bold;
+  border-radius: 8px;
+  color: #776e65;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Different tile colors */
+.tile-0 { background: #cdc1b4; }
+.tile-2 { background: #eee4da; }
+.tile-4 { background: #ede0c8; }
+.tile-8 { background: #f2b179; color: #f9f6f2; }
+.tile-16 { background: #f59563; color: #f9f6f2; }
+.tile-32 { background: #f67c5f; color: #f9f6f2; }
+.tile-64 { background: #f65e3b; color: #f9f6f2; }
+.tile-128 { background: #edcf72; color: #f9f6f2; }
+.tile-256 { background: #edcc61; color: #f9f6f2; }
+.tile-512 { background: #edc850; color: #f9f6f2; }
+.tile-1024 { background: #edc53f; color: #f9f6f2; }
+.tile-2048 { background: #edc22e; color: #f9f6f2; }
+
+/* Button */
+.new-game-btn {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background: #8f7a66;
+  color: #f9f6f2;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* Leaderboard */
+.leaderboard {
+  background: #f2b179;
+  border-radius: 8px;
+  padding: 10px;
+  max-width: 320px;
+  margin: 20px auto;
+  color: #fff;
+  font-weight: bold;
+}
+
+.leaderboard h3 {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.leaderboardEntry {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+
+.leaderboardEntry:last-child {
+  border-bottom: none;
+}
+
+
+/* Overall page */
+.container {
+  text-align: center;
+  font-family: 'Arial', sans-serif;
+  background: #faf8ef;
+  min-height: 100vh;
+  padding: 20px;
+}

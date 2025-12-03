@@ -1,91 +1,122 @@
-'use client';
 import { useState, useEffect } from "react";
 
+// Board type
 export type Board = number[][];
 
+// Board size
+const SIZE = 4;
+
+// Get empty cells
+function getEmptyPositions(board: Board) {
+  const empty: [number, number][] = [];
+  for (let i = 0; i < SIZE; i++) {
+    for (let j = 0; j < SIZE; j++) {
+      if (board[i][j] === 0) empty.push([i, j]);
+    }
+  }
+  return empty;
+}
+
+// Add a random tile (2 or 4)
+function addRandomTile(board: Board): Board {
+  const empty = getEmptyPositions(board);
+  if (empty.length === 0) return board;
+  const [i, j] = empty[Math.floor(Math.random() * empty.length)];
+  const newBoard = board.map(r => [...r]);
+  newBoard[i][j] = Math.random() < 0.9 ? 2 : 4;
+  return newBoard;
+}
+
+// Main hook
 export function useGameLogic() {
-  const [board, setBoard] = useState<Board>(generateEmptyBoard());
-  const [score, setScore] = useState<number>(0);
+  const [board, setBoard] = useState<Board>(
+    Array.from({ length: SIZE }, () => Array(SIZE).fill(0))
+  );
+  const [score, setScore] = useState(0);
 
-  function generateEmptyBoard(): Board {
-    return Array.from({ length: 4 }, () => Array(4).fill(0));
-  }
-
-  function addRandomTile(newBoard: Board): Board {
-    const empty: [number, number][] = [];
-    newBoard.forEach((row, i) =>
-      row.forEach((tile, j) => {
-        if (tile === 0) empty.push([i, j]);
-      })
-    );
-    if (empty.length === 0) return newBoard;
-    const [i, j] = empty[Math.floor(Math.random() * empty.length)];
-    newBoard[i][j] = Math.random() < 0.9 ? 2 : 4;
-    return newBoard;
-  }
-
-  function reset() {
-    let b = generateEmptyBoard();
-    b = addRandomTile(addRandomTile(b));
-    setBoard(b);
-    setScore(0);
-  }
-
+  // Initialize board with 2 tiles
   useEffect(() => {
-    reset();
-    const handleKey = (e: KeyboardEvent) => {
-      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
-        e.preventDefault();
-        move(e.key.replace("Arrow", "").toLowerCase());
-      }
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    let b = addRandomTile(board);
+    b = addRandomTile(b);
+    setBoard(b);
   }, []);
 
-  function move(direction: string) {
-    let newBoard: Board = board.map((row) => [...row]);
-    let changed = false;
+  // Reset the game
+  const reset = () => {
+    let b: Board = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+    b = addRandomTile(b);
+    b = addRandomTile(b);
+    setBoard(b);
+    setScore(0);
+  };
 
-    const combine = (line: number[]): number[] => {
-      const newLine = line.filter((n) => n !== 0);
-      for (let i = 0; i < newLine.length - 1; i++) {
-        if (newLine[i] === newLine[i + 1]) {
-          newLine[i] *= 2;
-          setScore((prev) => prev + newLine[i]);
-          newLine[i + 1] = 0;
+  // Move tiles
+  const move = (direction: "up" | "down" | "left" | "right") => {
+    let rotated = rotateBoard(board, direction);
+    let newBoard = rotated.map(row => {
+      let filtered = row.filter(n => n !== 0);
+      for (let i = 0; i < filtered.length - 1; i++) {
+        if (filtered[i] === filtered[i + 1]) {
+          filtered[i] *= 2;
+          setScore(prev => prev + filtered[i]);
+          filtered[i + 1] = 0;
         }
       }
-      return newLine.filter((n) => n !== 0).concat(Array(line.length).fill(0)).slice(0, 4);
-    };
+      let newRow = filtered.filter(n => n !== 0);
+      while (newRow.length < SIZE) newRow.push(0);
+      return newRow;
+    });
 
-    if (direction === "left") {
-      newBoard = newBoard.map(combine);
-    } else if (direction === "right") {
-      newBoard = newBoard.map((row) => combine(row.reverse()).reverse());
-    } else if (direction === "up") {
-      newBoard = rotate(newBoard);
-      newBoard = newBoard.map(combine);
-      newBoard = rotate(newBoard, true);
-    } else if (direction === "down") {
-      newBoard = rotate(newBoard);
-      newBoard = newBoard.map((row) => combine(row.reverse()).reverse());
-      newBoard = rotate(newBoard, true);
+    // Reverse rotation to original direction
+    newBoard = reverseRotateBoard(newBoard, direction);
+
+    // Only update if board changed
+    if (JSON.stringify(board) !== JSON.stringify(newBoard)) {
+      setBoard(addRandomTile(newBoard));
     }
+  };
 
-    changed = JSON.stringify(newBoard) !== JSON.stringify(board);
-    if (changed) newBoard = addRandomTile(newBoard);
-    setBoard(newBoard);
+  return { board, score, reset, move };
+};
+
+// Rotate board helper
+function rotateBoard(board: Board, dir: string): Board {
+  let newBoard: Board = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+
+  if (dir === "up") {
+    for (let i = 0; i < SIZE; i++)
+      for (let j = 0; j < SIZE; j++)
+        newBoard[i][j] = board[j][i];
+  } else if (dir === "down") {
+    for (let i = 0; i < SIZE; i++)
+      for (let j = 0; j < SIZE; j++)
+        newBoard[i][j] = board[SIZE - 1 - j][i];
+  } else if (dir === "left") {
+    newBoard = board.map(r => [...r]);
+  } else if (dir === "right") {
+    newBoard = board.map(r => [...r].reverse());
   }
 
-  function rotate(matrix: Board, counterClockwise = false): Board {
-    const N = matrix.length;
-    const result: Board = Array.from({ length: N }, () => Array(N).fill(0));
-    for (let i = 0; i < N; i++)
-      for (let j = 0; j < N; j++)
-        result[counterClockwise ? N - j - 1 : j][counterClockwise ? i : i] = matrix[i][j];
-    return result;
+  return newBoard;
+}
+
+// Reverse rotation helper
+function reverseRotateBoard(board: Board, dir: string): Board {
+  let newBoard: Board = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+
+  if (dir === "up") {
+    for (let i = 0; i < SIZE; i++)
+      for (let j = 0; j < SIZE; j++)
+        newBoard[j][i] = board[i][j];
+  } else if (dir === "down") {
+    for (let i = 0; i < SIZE; i++)
+      for (let j = 0; j < SIZE; j++)
+        newBoard[SIZE - 1 - j][i] = board[i][j];
+  } else if (dir === "left") {
+    newBoard = board.map(r => [...r]);
+  } else if (dir === "right") {
+    newBoard = board.map(r => [...r].reverse());
   }
 
-  return { board, move, reset, score };
+  return newBoard;
 }

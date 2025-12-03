@@ -1,29 +1,21 @@
 import { supabase } from "../supabaseClient";
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const { username, score } = await request.json();
+    const { username, score } = await req.json();
 
-    if (!username || typeof score !== "number") {
-      return new Response(
-        JSON.stringify({ error: "Invalid input" }),
-        { status: 400 }
-      );
+    if (!username || score == null) {
+      return new Response(JSON.stringify({ error: "Username and score required" }), { status: 400 });
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("scores")
       .insert([{ username, score }]);
 
-    if (error) {
-      console.error("Supabase insert error:", error);
-      return new Response(JSON.stringify({ error }), { status: 400 });
-    }
+    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
-
+    return new Response(JSON.stringify({ success: true, data }), { status: 200 });
   } catch (err) {
-    console.error("submitScore crashed:", err);
-    return new Response(JSON.stringify({ error: "Server Error" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Failed to submit score" }), { status: 500 });
   }
 }
